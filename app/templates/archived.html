@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+
+{% block title %}Relatórios Arquivados - {{ super() }}{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row">
+        <div class="col-md-12">
+            
+            <div class="mb-4">
+                <h1>Relatórios Arquivados</h1>
+                <p class="lead">Estes são os relatórios que você marcou como arquivados. Eles não aparecem no dashboard principal.</p>
+            </div>
+            
+            <hr>
+
+            {% if reports %}
+                <ul class="list-group">
+                    {% for report in reports %}
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        <div>
+                            <a href="{{ url_for('main.view_report', report_id=report.id) }}">
+                                {{ report.title }}
+                            </a>
+                            <span class="text-muted small ms-3">
+                                (Arquivado em: {{ report.created_date.strftime('%d/%m/%Y') }})
+                            </span>
+                        </div>
+                        
+                        <div class="d-flex gap-2">
+                            <form action="{{ url_for('main.unarchive_report', report_id=report.id) }}" method="POST" style="display: inline;">
+                                <button type="submit" class="btn btn-sm btn-outline-success">Restaurar</d>
+                            </form>
+                            
+                            <form action="{{ url_for('main.delete_report', report_id=report.id) }}" method="POST" style="display: inline;"
+                                  onsubmit="return confirm('Tem certeza que deseja excluir este relatório permanentemente? Esta ação não pode ser desfeita.');">
+                                <button type="submit" class="btn btn-sm btn-outline-danger">Excluir</d>
+                            </form>
+                        </div>
+                        </li>
+                    {% endfor %}
+                </ul>
+            {% else %}
+                <p>Você não tem nenhum relatório arquivado.</p>
+            {% endif %}
+
+        </div>
+    </div>
+</div>
+{% endblock %}

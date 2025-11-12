@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>Relatório: {{ report.title }}</title>
+    <style>
+        /* Estilos simples para o PDF */
+        body {
+            /* --- MUDANÇA AQUI --- 
+               Sendo mais específico sobre a fonte */
+            font-family: Arial, "Helvetica Neue", Helvetica, sans-serif;
+            margin: 2cm;
+        }
+        h1 {
+            color: #333;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+        tr.total {
+            font-weight: bold;
+            background-color: #f9f9f9;
+        }
+        td.amount {
+            text-align: right;
+        }
+    </style>
+</head>
+<body>
+    <h1>Relatório de Despesas: {{ report.title }}</h1>
+    <p>Criado por: {{ report.author.nome }}</p>
+    <p>Data: {{ report.created_date.strftime('%d/%m/%Y') }}</p>
+
+    <hr>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Descrição</th>
+                <th style="text-align: right;">Valor (R$)</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for expense in expenses %}
+            <tr>
+                <td>{{ expense.description }}</td>
+                <td class="amount">{{ "%.2f"|format(expense.amount) }}</td>
+            </tr>
+            {% else %}
+            <tr>
+                <td colspan="2">Nenhuma despesa registrada.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+        <tfoot>
+            <tr class="total">
+                <td>TOTAL</td>
+                <td class="amount">R$ {{ "%.2f"|format(total) }}</td>
+            </tr>
+        </tfoot>
+    </table>
+</body>
+</html>

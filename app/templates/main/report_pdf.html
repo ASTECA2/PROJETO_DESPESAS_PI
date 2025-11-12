@@ -1,0 +1,66 @@
+<!doctype html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>{{ report.titulo }}</title>
+    <style>
+        body { font-family: sans-serif; margin: 2cm; }
+        h1 { color: #333; }
+        .info { margin-bottom: 20px; }
+        .info p { margin: 5px 0; }
+        table { 
+            width: 100%; 
+            border-collapse: collapse; 
+            margin-top: 20px; 
+        }
+        th, td { 
+            border: 1px solid #ccc; 
+            padding: 10px; 
+            text-align: left; 
+        }
+        th { background-color: #f4f4f4; }
+        .total { 
+            text-align: right; 
+            font-size: 1.2em; 
+            font-weight: bold; 
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Relatório de Despesas</h1>
+    <hr>
+    
+    <div class="info">
+        <p><strong>Relatório:</strong> {{ report.titulo }}</p>
+        <p><strong>Solicitante:</strong> {{ report.author.nome }} ({{ report.author.email }})</p>
+        <p><strong>Data de Emissão:</strong> {{ "now"|date('%d/%m/%Y') }}</p>
+    </div>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Data</th>
+                <th>Descrição</th>
+                <th>Categoria</th>
+                <th>Valor (R$)</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for expense in expenses %}
+                <tr>
+                    <td>{{ expense.data_despesa.strftime('%d/%m/%Y') }}</td>
+                    <td>{{ expense.descricao }}</td>
+                    <td>{{ expense.categoria }}</td>
+                    <td>{{ "%.2f"|format(expense.valor) }}</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <div class="total">
+        Total Geral: R$ {{ "%.2f"|format(total) }}
+    </div>
+
+</body>
+</html>

@@ -1,0 +1,139 @@
+/* ...existing code... */
+/* app/static/css/style.css
+
+Este é o seu arquivo de estilo personalizado.
+(Versão com sintaxe corrigida)
+*/
+
+/* --- 1. Configurações Globais e Fonte --- */
+
+/* Importa uma fonte do Google Fonts */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap');
+
+body {
+    /* Aplica a nova fonte */
+    font-family: 'Inter', sans-serif;
+
+    /* Um fundo cinza um pouco mais suave que o padrão do Bootstrap */
+    background-color: #f4f7f6;
+}
+
+/* Melhora a aparência dos títulos */
+h1, h2, h3, h4, h5, h6 {
+    color: #333;
+    font-weight: 700;
+}
+
+/* --- 2. Barra de Navegação (Navbar) --- */
+
+/* Substitui a classe .bg-dark do Bootstrap */
+.navbar.bg-dark {
+    /* Um gradiente azul profissional, em vez do preto */
+    background: linear-gradient(90deg, #383838, #0056b3) !important;
+
+    /* Adiciona uma sombra suave abaixo da barra */
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+/* Deixa o nome "MeuSaaS" mais forte */
+.navbar-brand {
+    font-weight: 700;
+}
+
+/* Melhora a cor do texto "Olá, Rodrigo" */
+.navbar-text {
+    color: #e9ecef !important;
+}
+
+/* Arredonda o botão de logout */
+.btn-outline-light {
+    border-color: #c9e0ff;
+    color: #c9e0ff;
+    border-radius: 50px;
+}
+
+/* Melhora o hover do botão de logout */
+.btn-outline-light:hover {
+    background-color: #ffffff;
+    color: #004a99; /* Cor do texto no hover */
+}
+
+/* --- 3. Botões Principais (Primário e Perigo) --- */
+
+.btn-primary,
+.btn-danger {
+    /* Deixa os botões em formato "pílula" */
+    border-radius: 50px;
+
+    /* Mais preenchimento lateral */
+    padding-left: 25px;
+    padding-right: 25px;
+
+    font-weight: 500;
+    border: none;
+
+    /* Pequena animação ao passar o mouse */
+    transition: transform 0.2s ease-out, box-shadow 0.2s ease-out;
+}
+
+.btn-primary:hover,
+.btn-danger:hover {
+    /* Efeito de "levantar" ao passar o mouse */
+    transform: translateY(-2px);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+}
+
+/* Vamos definir nossa própria cor azul primária */
+.btn-primary {
+    background-color: #0069d9;
+}
+
+.btn-primary:hover {
+    background-color: #0056b3; /* Um tom mais escuro no hover */
+}
+
+/* --- 4. Cartões (Login, Cadastro, Adicionar Despesa) --- */
+
+.card {
+    /* Remove a borda padrão do Bootstrap */
+    border: none;
+
+    /* Cantos mais arredondados */
+    border-radius: 12px;
+
+    /* Sombra mais suave e profissional */
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.05);
+}
+
+/* Muda o fundo do rodapé do cartão (onde tem "Novo por aqui?") */
+.card-footer {
+    background-color: #f8f9fa;
+}
+
+/* --- 5. Lista de Relatórios no Dashboard --- */
+
+.list-group-item {
+    /* Remove as bordas da lista */
+    border: none;
+    padding-top: 15px;
+    padding-bottom: 15px;
+}
+
+/* Estiliza o link do relatório */
+.list-group-item a {
+    text-decoration: none;
+    font-weight: 500;
+    color: #004a99;
+    transition: color 0.2s ease-out;
+}
+
+/* Muda a cor do link ao passar o mouse */
+.list-group-item a:hover {
+    color: #0069d9;
+}
+
+/* Adiciona um fundo sutil ao passar o mouse no item da lista */
+.list-group-item:hover {
+    background-color: #e9ecef;
+}
+/* ...existing code... */
