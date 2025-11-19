@@ -1,83 +1,11 @@
 from flask import render_template, redirect, url_for, flash, abort, Response, request, send_file
 from io import BytesIO
-from xhtml2pdf import pisa
+from fpdf import FPDF  # <--- Importação nova
 from app.main import bp
 from flask_login import login_required, current_user
+# ... (mantenha seus outros imports de forms e models)
 
-from app import db
-from app.main.forms import ReportForm, ExpenseForm
-from app.models import ExpenseReport, Expense
-
-@bp.route('/')
-@bp.route('/index')
-def index():
-    if current_user.is_authenticated:
-        return redirect(url_for('main.dashboard'))
-    return redirect(url_for('auth.login'))
-
-
-@bp.route('/dashboard')
-@login_required
-def dashboard():
-    # Agora filtra para mostrar APENAS relatórios não arquivados
-    reports = ExpenseReport.query.filter_by(author=current_user, is_archived=False)\
-        .order_by(ExpenseReport.created_date.desc()).all()
-    
-    return render_template('index.html', title='Dashboard', reports=reports)
-
-
-# --- ROTA NOVA PARA A PÁGINA DE ARQUIVADOS ---
-@bp.route('/archived')
-@login_required
-def archived_reports():
-    # Busca APENAS relatórios arquivados
-    reports = ExpenseReport.query.filter_by(author=current_user, is_archived=True)\
-        .order_by(ExpenseReport.created_date.desc()).all()
-    
-    return render_template('archived.html', title='Relatórios Arquivados', reports=reports)
-
-
-@bp.route('/create_report', methods=['GET', 'POST'])
-@login_required
-def create_report():
-    form = ReportForm()
-    if form.validate_on_submit():
-        report = ExpenseReport(title=form.title.data, author=current_user)
-        db.session.add(report)
-        db.session.commit()
-        flash('Relatório criado com sucesso!', 'success')
-        return redirect(url_for('main.view_report', report_id=report.id))
-    
-    return render_template('create_report.html', title='Novo Relatório', form=form)
-
-
-@bp.route('/report/<int:report_id>', methods=['GET', 'POST'])
-@login_required
-def view_report(report_id):
-    report = ExpenseReport.query.get_or_404(report_id)
-    if report.author != current_user:
-        abort(403) 
-
-    form = ExpenseForm()
-    if form.validate_on_submit():
-        expense = Expense(description=form.description.data, 
-                          amount=form.amount.data, 
-                          report=report)
-        db.session.add(expense)
-        db.session.commit()
-        flash('Despesa adicionada!', 'success')
-        return redirect(url_for('main.view_report', report_id=report.id))
-
-    expenses = report.expenses.order_by(Expense.date.asc()).all()
-    total = sum(e.amount for e in expenses)
-    
-    return render_template('view_report.html', 
-                           title=report.title, 
-                           report=report, 
-                           expenses=expenses,
-                           total=total,
-                           form=form)
-
+# ... (mantenha as outras rotas iguais) ...
 
 @bp.route('/report/<int:report_id>/pdf')
 @login_required
@@ -89,26 +17,49 @@ def download_pdf(report_id):
     expenses = report.expenses.order_by(Expense.date.asc()).all()
     total = sum(e.amount for e in expenses)
 
-    # Renderiza o template HTML
-    html = render_template('report_pdf.html', 
-                           report=report, 
-                           expenses=expenses, 
-                           total=total)
-    
-    # Cria um buffer na memória para o PDF
+    # --- CRIAÇÃO DO PDF COM FPDF2 (PURO PYTHON) ---
+    class PDF(FPDF):
+        def header(self):
+            self.set_font('helvetica', 'B', 16)
+            self.cell(0, 10, f'Relatório: {report.title}', border=False, new_x="LMARGIN", new_y="NEXT", align='C')
+            self.ln(10)
+
+        def footer(self):
+            self.set_y(-15)
+            self.set_font('helvetica', 'I', 8)
+            self.cell(0, 10, f'Página {self.page_no()}/{{nb}}', align='C')
+
+    # Inicializa o PDF
+    pdf = PDF()
+    pdf.add_page()
+    pdf.set_font("helvetica", size=12)
+
+    # Cabeçalho da Tabela
+    pdf.set_fill_color(200, 220, 255)
+    pdf.cell(100, 10, "Descrição", border=1, fill=True)
+    pdf.cell(40, 10, "Data", border=1, fill=True)
+    pdf.cell(50, 10, "Valor (R$)", border=1, fill=True, new_x="LMARGIN", new_y="NEXT")
+
+    # Linhas da Tabela
+    for expense in expenses:
+        pdf.cell(100, 10, expense.description, border=1)
+        # Formata a data se existir
+        data_str = expense.date.strftime('%d/%m/%Y') if expense.date else "-"
+        pdf.cell(40, 10, data_str, border=1)
+        pdf.cell(50, 10, f"R$ {expense.amount:.2f}", border=1, new_x="LMARGIN", new_y="NEXT")
+
+    # Total
+    pdf.ln(5)
+    pdf.set_font("helvetica", 'B', 12)
+    pdf.cell(140, 10, "TOTAL GERAL:", border=0, align='R')
+    pdf.cell(50, 10, f"R$ {total:.2f}", border=1, align='C')
+
+    # Salva na memória
     pdf_buffer = BytesIO()
-    
-    # Converte o HTML para PDF usando xhtml2pdf
-    pisa_status = pisa.CreatePDF(html, dest=pdf_buffer)
-
-    # Verifica erros
-    if pisa_status.err:
-        return "Erro ao gerar PDF", 500
-
-    # Volta o ponteiro para o início do arquivo na memória
+    pdf.output(pdf_buffer)
     pdf_buffer.seek(0)
 
-    filename = f"relatorio_{report.title.lower().replace(' ', '_')}_{report.id}.pdf"
+    filename = f"relatorio_{report.id}.pdf"
     
     return send_file(
         pdf_buffer,
@@ -116,51 +67,3 @@ def download_pdf(report_id):
         download_name=filename,
         mimetype='application/pdf'
     )
-
-
-# --- ROTA NOVA PARA ARQUIVAR ---
-@bp.route('/report/<int:report_id>/archive', methods=['POST'])
-@login_required
-def archive_report(report_id):
-    report = ExpenseReport.query.get_or_404(report_id)
-    if report.author != current_user:
-        abort(403)
-    
-    report.is_archived = True
-    db.session.commit()
-    flash('Relatório arquivado.', 'success')
-    return redirect(url_for('main.dashboard'))
-
-
-# --- ROTA NOVA PARA DESARQUIVAR ---
-@bp.route('/report/<int:report_id>/unarchive', methods=['POST'])
-@login_required
-def unarchive_report(report_id):
-    report = ExpenseReport.query.get_or_404(report_id)
-    if report.author != current_user:
-        abort(403)
-    
-    report.is_archived = False
-    db.session.commit()
-    flash('Relatório restaurado para o dashboard.', 'success')
-    return redirect(url_for('main.archived_reports'))
-
-
-# --- ROTA NOVA PARA EXCLUIR ---
-@bp.route('/report/<int:report_id>/delete', methods=['POST'])
-@login_required
-def delete_report(report_id):
-    report = ExpenseReport.query.get_or_404(report_id)
-    if report.author != current_user:
-        abort(403)
-    
-    # Exclui todas as despesas primeiro
-    Expense.query.filter_by(report_id=report.id).delete()
-    
-    # Exclui o relatório
-    db.session.delete(report)
-    db.session.commit()
-    flash('Relatório excluído permanentemente.', 'success')
-    
-    # Redireciona para a página de onde veio (arquivados ou dashboard)
-    return redirect(request.referrer or url_for('main.dashboard'))
