@@ -1,5 +1,6 @@
-from flask import render_template, redirect, url_for, flash, abort, Response, request
-import weasyprint
+from flask import render_template, redirect, url_for, flash, abort, Response, request, send_file
+from io import BytesIO
+from xhtml2pdf import pisa
 from app.main import bp
 from flask_login import login_required, current_user
 
@@ -88,17 +89,33 @@ def download_pdf(report_id):
     expenses = report.expenses.order_by(Expense.date.asc()).all()
     total = sum(e.amount for e in expenses)
 
+    # Renderiza o template HTML
     html = render_template('report_pdf.html', 
                            report=report, 
                            expenses=expenses, 
                            total=total)
     
-    pdf = weasyprint.HTML(string=html).write_pdf()
+    # Cria um buffer na memória para o PDF
+    pdf_buffer = BytesIO()
+    
+    # Converte o HTML para PDF usando xhtml2pdf
+    pisa_status = pisa.CreatePDF(html, dest=pdf_buffer)
+
+    # Verifica erros
+    if pisa_status.err:
+        return "Erro ao gerar PDF", 500
+
+    # Volta o ponteiro para o início do arquivo na memória
+    pdf_buffer.seek(0)
 
     filename = f"relatorio_{report.title.lower().replace(' ', '_')}_{report.id}.pdf"
-    response = Response(pdf, mimetype='application/pdf')
-    response.headers['Content-Disposition'] = f'attachment; filename={filename}'
-    return response
+    
+    return send_file(
+        pdf_buffer,
+        as_attachment=True,
+        download_name=filename,
+        mimetype='application/pdf'
+    )
 
 
 # --- ROTA NOVA PARA ARQUIVAR ---
