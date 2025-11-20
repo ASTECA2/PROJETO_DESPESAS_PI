@@ -8,7 +8,10 @@
         <div class="card shadow-sm">
             <div class="card-body">
                 <h3 class="card-title text-center mb-4">Login</h3>
+                
                 <form method="POST" action="{{ url_for('auth.login') }}">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                    
                     <div class="mb-3">
                         <label for="email" class="form-label">Email</label>
                         <input type="email" class="form-control" id="email" name="email" required>
@@ -19,6 +22,7 @@
                     </div>
                     <button type="submit" class="btn btn-primary w-100">Entrar</button>
                 </form>
+                
                 <hr>
                 <p class="text-center mb-0">
                     Não tem uma conta? <a href="{{ url_for('auth.register') }}">Cadastre-se</a>
