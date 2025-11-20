@@ -2,11 +2,14 @@ from flask import Flask
 from config import Config
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager
+from flask_wtf.csrf import CSRFProtect # <--- IMPORT NOVO
 import os
 
 # Instancia as extensões
 db = SQLAlchemy()
 login = LoginManager()
+csrf = CSRFProtect() # <--- EXTENSÃO NOVA
+
 login.login_view = 'auth.login'
 login.login_message = 'Por favor, faça login para acessar esta página.'
 login.login_message_category = 'info'
@@ -26,23 +29,20 @@ def create_app(config_class=Config):
     # Inicializa as extensões
     db.init_app(app)
     login.init_app(app)
+    csrf.init_app(app) # <--- INICIALIZAÇÃO NOVA
 
-    # --- REGISTRO DOS BLUEPRINTS (AQUI ESTAVA O PROBLEMA) ---
+    # --- REGISTRO DOS BLUEPRINTS ---
     
-    # 1. Blueprint Principal (Dashboard, Index, Relatórios)
-    # Não usamos url_prefix para que ele assuma a raiz '/'
+    # 1. Blueprint Principal
     from app.main import bp as main_bp
     app.register_blueprint(main_bp)
 
-    # 2. Blueprint de Autenticação (Login, Register)
-    # Usamos url_prefix para organizar as URLs como /auth/login
+    # 2. Blueprint de Autenticação
     from app.auth import bp as auth_bp
     app.register_blueprint(auth_bp, url_prefix='/auth')
 
-    # --- CRIAÇÃO DO BANCO DE DADOS (ESSENCIAL PARA VERCEL) ---
+    # --- CRIAÇÃO DO BANCO DE DADOS ---
     with app.app_context():
-        # Isso cria as tabelas (User, ExpenseReport, etc) se não existirem.
-        # Sem isso, o login falha porque a tabela 'user' não existe.
         db.create_all()
 
     return app
