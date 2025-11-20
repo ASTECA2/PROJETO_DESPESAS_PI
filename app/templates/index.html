@@ -35,11 +35,13 @@
                         
                         <div class="d-flex gap-2">
                             <form action="{{ url_for('main.archive_report', report_id=report.id) }}" method="POST" style="display: inline;">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
                                 <button type="submit" class="btn btn-sm btn-outline-secondary">Arquivar</button>
                             </form>
                             
                             <form action="{{ url_for('main.delete_report', report_id=report.id) }}" method="POST" style="display: inline;"
                                   onsubmit="return confirm('Tem certeza que deseja excluir este relatório permanentemente? Esta ação não pode ser desfeita.');">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
                                 <button type="submit" class="btn btn-sm btn-outline-danger">Excluir</button>
                             </form>
                         </div>
